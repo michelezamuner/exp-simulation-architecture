@@ -29,7 +29,7 @@ The ball is perfectly elastic, so it will return at the same height as where it 
 
 For future iterations, we might want to add the ability to store configuration values that the simulation depends on, like the height of the ball, or the value of gravity. These configuration values should be changeable (but just when the simulation is not running), and it should be possible to reset them to the original values.
 
-Additionally, we want to be able to run the simulation in debug mode, where comprehensive logs of every simulation step is recorded. When the simulation is not running in debug mode, only warning, error and critical level logs are written.
+Additionally, we want to keep a log of all major events happening in the system, which will be simulation start, simulation stop, and errors. This would be useful to perform an audit of the application once every while, to check that everything is working properly.
 
 
 ## Actors and use cases
@@ -55,7 +55,7 @@ Feature: Simulation
     Scenario: Watching stopped simulation
         Given the simulation is stopped
         When I watch the simulation
-        Then I get an error message for watching stopped simulation
+        Then I get an error message about watching stopped simulation
         
     Scenario: Start the simulation
         Given the simulation is stopped
@@ -66,7 +66,7 @@ Feature: Simulation
     Scenario: Starting started simulation
         Given the simulation is started
         When I start the simulation
-        Then I get an error message for starting started simulation
+        Then I get an error message about starting started simulation
         
     Scenario: Watch the simulation
         Given the simulation is started
@@ -77,76 +77,51 @@ Feature: Simulation
         Given the simulation is started
         When I stop the simulation
         And I watch the simulation
-        Then I get an error message for watching stopped simulation
+        Then I get an error message about watching stopped simulation
         
     Scenario: Stopping stopped simulation
         Given the simulation is stopped
         When I stop the simulation
-        Then I get an error message for stopping stopped simulation
+        Then I get an error message about stopping stopped simulation
 ```
 
 Here we've decided that the application would throw an error when trying to watch a stopped simulation. Alternatively, we could add another use case like Check Simulation State, but this is not part of the business requirements: it would only be a way to simplify the design. 
 
 
-### Developer
+### Auditor
 
-Regarding logging, the Developer actor is the one interested in checking logs, and running the simulation in debug mode. As far as use cases are concerned, for the Developer they are basically the same as the Player, but instead of checking some kind of output, we verify that logs are written.
+The Auditor is the one interested in checking audit logs. Concerning use cases, there isn't really any direct use case for the auditor, since he would likely not use the application to check its logs, however we can ensure that logs are written at the right times, by pretending the auditor is using the application to verify that logs are written.
 
 ```gherkin
-Feature: Basic logging
-    As a Developer
-    I want to check basic logs
-    In order to check if any error happened in the application
+Feature: Audit logging
+    As an Auditor
+    I want to check logs of all major events
+    In order to verify that the system is working properly
     
     Scenario: Warning log watching stopped simulation
         Given the simulation is stopped
         When I watch the simulation
-        Then a warning log is written for watching stopped simulation
+        Then a warning log is written about watching stopped simulation
+        
+    Scenario: Info log starting simulation
+        Given the simulation is stopped
+        When I start the simulation
+        Then an info log is written about starting the simulation
         
     Scenario: Warning log starting started simulation
         Given the simulation is started
         When I start the simulation
         Then a warning log is written for starting started simulation
         
+    Scenario: Info log stopping simulation
+        Given the simulation is started
+        When I stop the simulation
+        Then an info log is written about stopping the simulation
+        
     Scenario: Warning log stopping stopped simulation
         Given the simulation is stopped
         When I stop the simulation
         Then a warning log is written for stopping stopped simulation
-        
-    Scenario: No log starting simulation
-        Given the simulation is stopped
-        When I start the simulation
-        Then no log is written
-        
-    Scenario: No log watching simulation
-        Given the simulation is started
-        When I watch the simulation
-        Then no log is written
-        
-    Scenario: No log stopping simulation
-        Given the simulation is started
-        When I stop the simulation
-        Then no log is written
-
-Feature: Debug logging
-    As a Developer
-    I want to check debug logs
-    In order to verify that the application is working properly
-    
-    Scenario: Info log starting simulation
-        Given the simulation is stopped
-        When I start the simulation
-        Then an info log is written for starting simulation
-        
-    Scenario: Info log stopping simulation
-        Given the simulation is started
-        When I stop the simulation
-        Then an info log is written for stopping simulation
-        
-    Scenario: Debug log for simulation steps
-        Given the simulation is stopped
-        When I start the simulation
-        Then debug logs are written for each simulation step
 ```
 
 
